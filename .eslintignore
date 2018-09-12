@@ -1,0 +1,7 @@
+/build/
+/config/
+/dist/
+/routes/
+/models/
+/node_modules/
+/*.js
