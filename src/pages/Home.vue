@@ -17,7 +17,6 @@
 </template>
 
 <script>
-var ws = require('ws');
 // Vue.filter('disabled', function(val) { return val ? 'disabled': ''})
 export default {
   name: 'home',
@@ -30,39 +29,39 @@ export default {
     }
   },
   created () {
+    console.log('created')
     this.connect()
   },
-  destroyed() {
-      this.ws.close();
+  destroyed () {
+      this.ws.close()
   },
-  computed: {},
   methods: {
-    send() {
-      this.ws.send(this.newMessage);
-      this.newMessage = '';
+    send () {
+      this.ws.send(this.newMessage)
+      this.newMessage = ''
     },
     messageHandler(message) {
       try {
         console.log(message.data)
-        let data = JSON.parse(message.data);
+        let data = JSON.parse(message.data)
         switch(data.type) {
           case 'messages':
-            this.$set(this, 'messages', data.messages);
+            this.$set(this, 'messages', data.messages)
             break;
           case 'message':
-            this.messages.push(data.message);
+            this.messages.push(data.message)
             break;
           case 'memoryInfo':
             this.$set(this, 'memory', data.data)
         }
       } catch (e) {console.error(e)}
     },
-    disconnect() {
-        this.ws.close();
+    disconnect () {
+        this.ws.close()
     },
-    connect() {
-      // if (this.online) return false;
-      this.ws = new WebSocket('ws://localhost:5555')
+    connect () {
+      if (this.online) return false
+      this.ws = new WebSocket('ws://localhost:3000')
       this.ws.addEventListener('open', () => { this.online = true })
       this.ws.addEventListener('close', () => { this.online = false })
       this.ws.addEventListener('error', (err) => { console.error(err) })
