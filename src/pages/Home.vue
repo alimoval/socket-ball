@@ -15,6 +15,7 @@
         <ul>
             <li v-for="block in blocksPosition" v-bind:key='block.id'>{{ block }}</li>
         </ul>
+        <div v-html='block' style='min-height:300px; width:100%; background:black; position: relative;'></div>
     </div>
   </div>
 </template>
@@ -29,23 +30,28 @@ export default {
       blocksPosition: [],
       newMessage: '',
       online: false,
-      memory: {}
+      memory: {},
+      block: '<div style="width:20px;height:20px; background:white; position:absolute; left:10px;top:10px"></div>'
     }
   },
   created () {
     this.connect()
+    this.setPosition()
   },
   destroyed () {
       this.ws.close()
   },
   methods: {
+    setPosition () {
+      console.log(this.blocksPosition)
+    },
     send () {
       this.ws.send(this.newMessage)
       this.newMessage = ''
     },
-    messageHandler(message) {
+    messageHandler(event) {
       try {
-        let data = JSON.parse(message.data)
+        let data = JSON.parse(event.data)
         switch(data.type) {
           case 'messages':
             this.$set(this, 'messages', data.messages)
@@ -55,6 +61,8 @@ export default {
             break;
           case 'memoryInfo':
             this.$set(this, 'memory', data.data)
+          case 'blocks position':
+          this.$set(this, 'blocksPosition', data.blocksPossition)
         }
       } catch (e) {console.error(e)}
     },
@@ -64,13 +72,7 @@ export default {
     connect () {
       if (this.online) return false
       this.ws = new WebSocket('ws://localhost:3000')
-      this.ws.addEventListener('open', (messages, blocksPosition) => { 
-        this.online = true
-        this.messages = messages
-        this.blocksPosition = blocksPosition
-        console.log(this.messages)
-        console.log(this.blocksPosition)
-      })
+      this.ws.addEventListener('open', () => { this.online = true})
       this.ws.addEventListener('close', () => { this.online = false })
       this.ws.addEventListener('error', (err) => { console.error(err) })
       this.ws.addEventListener('message', this.messageHandler.bind(this))

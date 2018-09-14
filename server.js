@@ -39,13 +39,12 @@ app.use('/users', users);
 let clients = {};
 let messages = require('./data/messages');
 let blocksPossition = require('./data/blocksPossition');
-console.log(blocksPossition)
 let counter = 0;
 
 app.ws('/', (ws, req) => {
     let id = counter++;
     clients[id] = ws;
-    console.log('connect open');
+    console.log('WebSocket open');
     ws.on('message', (message) => {
         messages.push(message);
         for (let cid in clients) {
@@ -67,7 +66,7 @@ app.ws('/', (ws, req) => {
     //     }
     // });
     ws.on('close', () => {
-        console.log('connect close');
+        console.log('WebSocket close');
         // clearInterval(timer);
         delete clients[id];
     });
