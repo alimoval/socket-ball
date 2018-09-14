@@ -36,11 +36,55 @@ require('./config/passport')(passport);
 app.use('/api', apiHandler);
 app.use('/users', users);
 
-app.ws('/', function(ws, req) {
-    ws.on('message', function(msg) {
-      console.log(msg);
+let clients = {};
+let messages = require('./data/messages');
+let blocksPossition = require('./data/blocksPossition');
+console.log(blocksPossition)
+let counter = 0;
+
+app.ws('/', (ws, req) => {
+    let id = counter++;
+    clients[id] = ws;
+    console.log('connect open');
+    ws.on('message', (message) => {
+        messages.push(message);
+        for (let cid in clients) {
+            let client = clients[cid];
+            client.send(JSON.stringify({
+                type: 'message',
+                message
+            }));
+        }
     });
-    console.log('socket');
+    // ws.on('open', (messages, blocksPosition) => {
+    //     for (let cid in clients) {
+    //         let client = clients[cid];
+    //         client.send(JSON.stringify({
+    //             type: 'message',
+    //             messages,
+    //             blocksPosition
+    //         }));
+    //     }
+    // });
+    ws.on('close', () => {
+        console.log('connect close');
+        // clearInterval(timer);
+        delete clients[id];
+    });
+    ws.send(JSON.stringify({
+        type: 'messages',
+        messages
+    }));
+    ws.send(JSON.stringify({
+        type: 'blocks position',
+        blocksPossition
+    }));
+    // let timer = setInterval(() => {
+    //     ws.send(JSON.stringify({
+    //         type: 'memoryInfo',
+    //         data: process.memoryUsage()
+    //     }))
+    // }, 200) 
   });
 
 // Use redirect for all client requests
@@ -52,56 +96,11 @@ app.listen(process.env.PORT || 3000, function () {
     console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
 });
 
-var clients = {};
-var messages = require('./data/messages');
-var counter = 0;
-
-//     console.log(request.headers.cookie);
-//     let id = counter++;
-//     clients[id] = wsc;
-//     wsc.on('message', (message) => {
-//         messages.push(message);
-//         for (let cid in clients) {
-//             let client = clients[cid];
-//             client.send(JSON.stringify({
-//                 type: 'message',
-//                 message
-//             }));
-//         }
-        /* 
-            wss.clients.forEach((client) => {
-                client.send(JSON.stringify({
-                    type: 'message',
-                    message
-                }));
-            })
-        */
-    // });
-
-    // wsc.on('close', () => {
-    //     console.log('connect close');
-    //     // clearInterval(timer);
-    //     delete clients[id];
-    // })
-
-    // wsc.send(JSON.stringify({
-    //     type: 'messages',
-    //     messages
-    // }));
-
-
-    /* let timer = setInterval(() => {
-        wsc.send(JSON.stringify({
-            type: 'memoryInfo',
-            data: process.memoryUsage()
-        }))
-    }, 200) */
-
     // Example disconnect
     /* setTimeout(() => {
         wsc.close()
     }, 5000) */
 
-// setInterval(() => {
-//     fs.writeFile('./data/messages.json', JSON.stringify(messages), (err) => {if (err) console.log('error',err)});
-// }, 1000);
+setInterval(() => {
+    fs.writeFile('./data/messages.json', JSON.stringify(messages), (err) => {if (err) console.log('error',err)});
+}, 1000);

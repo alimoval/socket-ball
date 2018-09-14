@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "start": "node server.js",
+    "watch": "nodemon --ignore ./data --watch . index.js",
     "lint": "eslint --ext .js,.vue src",
     "build": "node build/build.js"
   },
@@ -22,8 +23,7 @@
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "vue": "^2.5.2",
-    "vue-router": "^3.0.1",
-    "ws": "^6.0.0"
+    "vue-router": "^3.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

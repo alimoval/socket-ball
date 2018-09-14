@@ -12,6 +12,9 @@
         <button @click="send">Send</button>
         <button @click="disconnect">Disconnect</button>
         <button @click="connect">Connect</button>
+        <ul>
+            <li v-for="block in blocksPosition" v-bind:key='block.id'>{{ block }}</li>
+        </ul>
     </div>
   </div>
 </template>
@@ -23,13 +26,13 @@ export default {
   data: function () {
     return {
       messages: [],
+      blocksPosition: [],
       newMessage: '',
       online: false,
       memory: {}
     }
   },
   created () {
-    console.log('created')
     this.connect()
   },
   destroyed () {
@@ -42,7 +45,6 @@ export default {
     },
     messageHandler(message) {
       try {
-        console.log(message.data)
         let data = JSON.parse(message.data)
         switch(data.type) {
           case 'messages':
@@ -62,7 +64,13 @@ export default {
     connect () {
       if (this.online) return false
       this.ws = new WebSocket('ws://localhost:3000')
-      this.ws.addEventListener('open', () => { this.online = true })
+      this.ws.addEventListener('open', (messages, blocksPosition) => { 
+        this.online = true
+        this.messages = messages
+        this.blocksPosition = blocksPosition
+        console.log(this.messages)
+        console.log(this.blocksPosition)
+      })
       this.ws.addEventListener('close', () => { this.online = false })
       this.ws.addEventListener('error', (err) => { console.error(err) })
       this.ws.addEventListener('message', this.messageHandler.bind(this))
