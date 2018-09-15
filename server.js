@@ -38,7 +38,7 @@ app.use('/users', users);
 
 let clients = {};
 let messages = require('./data/messages');
-let blocksPossition = require('./data/blocksPossition');
+let coordinates = require('./data/coordinates');
 let counter = 0;
 
 app.ws('/', (ws, req) => {
@@ -47,13 +47,19 @@ app.ws('/', (ws, req) => {
     console.log('WebSocket open');
     ws.on('message', (message) => {
         messages.push(message);
-        for (let cid in clients) {
-            let client = clients[cid];
-            client.send(JSON.stringify({
-                type: 'message',
-                message
-            }));
-        }
+        // for (let cid in clients) {
+        //     let client = clients[cid];
+        //     client.send(JSON.stringify({
+        //         type: 'message',
+        //         message
+        //     }));
+        // coordinates.push(message);
+        // for (let cid in clients) {
+        //         let client = clients[cid];
+        //         client.send(JSON.stringify({
+        //             type: 'message',
+        //             message
+        //         }));
     });
     // ws.on('open', (messages, blocksPosition) => {
     //     for (let cid in clients) {
@@ -75,8 +81,8 @@ app.ws('/', (ws, req) => {
         messages
     }));
     ws.send(JSON.stringify({
-        type: 'blocks position',
-        blocksPossition
+        type: 'coordinates',
+        coordinates
     }));
     // let timer = setInterval(() => {
     //     ws.send(JSON.stringify({

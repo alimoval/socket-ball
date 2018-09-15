@@ -9,13 +9,15 @@
         </ul>
         <div>{{ online }}</div>
         <input type="text" v-model="newMessage">
-        <button @click="send">Send</button>
+        <button @click="sendMessage">Send</button>
         <button @click="disconnect">Disconnect</button>
         <button @click="connect">Connect</button>
         <ul>
-            <li v-for="block in blocksPosition" v-bind:key='block.id'>{{ block }}</li>
+            <li v-for="item in coordinates" v-bind:key='item.id'>{{ item }}</li>
         </ul>
-        <div v-html='block' style='min-height:300px; width:100%; background:black; position: relative;'></div>
+        <div style='min-height:300px; width:100%; background:black; position: relative;'>
+          <div v-for="item in coordinates" v-bind:key='item.id' v-bind:style='`width:19px;height:19px;background:white;position:absolute;left:${item.left}px;top:${item.top}px;background:${item.color}`'></div>
+        </div>
     </div>
   </div>
 </template>
@@ -27,25 +29,34 @@ export default {
   data: function () {
     return {
       messages: [],
-      blocksPosition: [],
+      coordinates: [],
       newMessage: '',
       online: false,
-      memory: {},
-      block: '<div style="width:20px;height:20px; background:white; position:absolute; left:10px;top:10px"></div>'
+      memory: {}
     }
   },
   created () {
     this.connect()
-    this.setPosition()
   },
   destroyed () {
       this.ws.close()
   },
   methods: {
-    setPosition () {
-      console.log(this.blocksPosition)
+    clickHandler (event) {
+      event = event || window.event
+      var key = event.key || event.keyCode || event.code;
+      if(key === 39 || key === 'ArrowRight'){
+        console.log('Right to 10px')
+        this.coordinates.forEach(item => {
+          if (item.id === '1'){
+            item.left = parseInt(item.left, 10) + 10 + ''
+            console.log(item)
+          }
+        })
+        this.ws.send(this.coordinates)
+      }
     },
-    send () {
+    sendMessage () {
       this.ws.send(this.newMessage)
       this.newMessage = ''
     },
@@ -55,14 +66,16 @@ export default {
         switch(data.type) {
           case 'messages':
             this.$set(this, 'messages', data.messages)
-            break;
+            break
           case 'message':
             this.messages.push(data.message)
-            break;
+            break
           case 'memoryInfo':
             this.$set(this, 'memory', data.data)
-          case 'blocks position':
-          this.$set(this, 'blocksPosition', data.blocksPossition)
+            break
+          case 'coordinates':
+            this.$set(this, 'coordinates', data.coordinates)
+            break
         }
       } catch (e) {console.error(e)}
     },
@@ -76,6 +89,7 @@ export default {
       this.ws.addEventListener('close', () => { this.online = false })
       this.ws.addEventListener('error', (err) => { console.error(err) })
       this.ws.addEventListener('message', this.messageHandler.bind(this))
+      window.onkeydown = this.clickHandler.bind(this);
     }
   }
 }
