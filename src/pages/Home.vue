@@ -1,22 +1,26 @@
 <template>
   <div class='container'>
     <div class='row'>
-        <div>
+        <div v-if='memory'>
             {{ memory }}
         </div>
-        <ul>
-            <li v-for="message in messages" v-bind:key='message.id'>{{ message }}</li>
+        <ul style='list-style:none;'>
+            <li v-for='message in messages' v-bind:key='message.id'>{{ message }}</li>
         </ul>
-        <div>{{ online }}</div>
-        <input type="text" v-model="newMessage">
-        <button @click="sendMessage">Send</button>
-        <button @click="disconnect">Disconnect</button>
-        <button @click="connect">Connect</button>
-        <ul>
-            <li v-for="item in coordinates" v-bind:key='item.id'>{{ item }}</li>
-        </ul>
+        <div>online: {{ online }}</div>
+        <form v-on:submit='sendMessage'>
+          <input type='text' v-model='newMessage'>
+          <input type='submit' value='Send'>
+        </form>
+        <button @click='disconnect'>Disconnect</button>
+        <button @click='connect'>Connect</button>
+        <br>
+        <br>
+        <!-- <ul>
+            <li v-for='item in coordinates' v-bind:key='item.id'>{{ item }}</li>
+        </ul> -->
         <div style='min-height:300px; width:100%; background:black; position: relative;'>
-          <div v-for="item in coordinates" v-bind:key='item.id' v-bind:style='`width:19px;height:19px;background:white;position:absolute;left:${item.left}px;top:${item.top}px;background:${item.color}`'></div>
+          <div v-for='item in coordinates' v-bind:key='item.id' v-bind:style='`width:19px;height:19px;background:white;position:absolute;left:${item.left}px;top:${item.top}px;background:${item.color}`'></div>
         </div>
     </div>
   </div>
@@ -29,10 +33,10 @@ export default {
   data: function () {
     return {
       messages: [],
+      userId: '',
       coordinates: [],
       newMessage: '',
       online: false,
-      memory: {}
     }
   },
   created () {
@@ -46,14 +50,13 @@ export default {
       event = event || window.event
       var key = event.key || event.keyCode || event.code;
       if(key === 39 || key === 'ArrowRight'){
-        console.log('Right to 10px')
+        // console.log('User ' + this.userId + ' right to 10px')
         this.coordinates.forEach(item => {
-          if (item.id === '1'){
+          if (+item.id === this.userId){
             item.left = parseInt(item.left, 10) + 10 + ''
-            console.log(item)
+            this.ws.send(JSON.stringify(item))
           }
         })
-        this.ws.send(this.coordinates)
       }
     },
     sendMessage () {
@@ -74,7 +77,11 @@ export default {
             this.$set(this, 'memory', data.data)
             break
           case 'coordinates':
+            this.coordinates = []
             this.$set(this, 'coordinates', data.coordinates)
+            break
+          case 'user':
+            this.$set(this, 'userId', data.id)
             break
         }
       } catch (e) {console.error(e)}

@@ -39,29 +39,59 @@ app.use('/users', users);
 let clients = {};
 let messages = require('./data/messages');
 let coordinates = require('./data/coordinates');
-let counter = 0;
+let counter = 1;
+let top = 1;
+let colors = ['blue', 'yellow', 'red', 'green'];
 
 app.ws('/', (ws, req) => {
+    ws.on('connection', () => {
+        console.log('connected');
+    });
     let id = counter++;
+    let userTop = top++;
+    let userColor = colors[Math.floor(Math.random()*colors.length)];
+    userCoordinates = { "id": id+'', "left": "10", "top": userTop*30+'', "color": userColor };
+    coordinates.push(userCoordinates);
     clients[id] = ws;
     console.log('WebSocket open');
     ws.on('message', (message) => {
-        messages.push(message);
+        try{
+            message = JSON.parse(message) || message;
+        } catch (e){ }
+        if(!message.id){
+            console.log(message)
+            messages.push(message);
+            for (let cid in clients) {
+                let client = clients[cid];
+                client.send(JSON.stringify({
+                    type: 'message',
+                    message
+                }));
+            }
+        } else {
+            coordinates.forEach((item, i, arr) => {
+                if(item.id === message.id){
+                    arr[i] = message
+                }
+                console.log(coordinates)
+            });
+            for (let cid in clients) {
+                let client = clients[cid];
+                client.send(JSON.stringify({
+                    type: 'coordinates',
+                    coordinates
+                }));
+            }
+        }
         // for (let cid in clients) {
         //     let client = clients[cid];
         //     client.send(JSON.stringify({
-        //         type: 'message',
+        //         type: 'coordinates',
         //         message
         //     }));
-        // coordinates.push(message);
-        // for (let cid in clients) {
-        //         let client = clients[cid];
-        //         client.send(JSON.stringify({
-        //             type: 'message',
-        //             message
-        //         }));
+        // }
     });
-    // ws.on('open', (messages, blocksPosition) => {
+    // ws.on('open', (messages) => {
     //     for (let cid in clients) {
     //         let client = clients[cid];
     //         client.send(JSON.stringify({
@@ -71,9 +101,11 @@ app.ws('/', (ws, req) => {
     //         }));
     //     }
     // });
+    ws.on('connection', () => {
+
+    });
     ws.on('close', () => {
         console.log('WebSocket close');
-        // clearInterval(timer);
         delete clients[id];
     });
     ws.send(JSON.stringify({
@@ -83,6 +115,10 @@ app.ws('/', (ws, req) => {
     ws.send(JSON.stringify({
         type: 'coordinates',
         coordinates
+    }));
+    ws.send(JSON.stringify({
+        type: 'user',
+        id
     }));
     // let timer = setInterval(() => {
     //     ws.send(JSON.stringify({
@@ -106,6 +142,6 @@ app.listen(process.env.PORT || 3000, function () {
         wsc.close()
     }, 5000) */
 
-setInterval(() => {
-    fs.writeFile('./data/messages.json', JSON.stringify(messages), (err) => {if (err) console.log('error',err)});
-}, 1000);
+// setInterval(() => {
+//     fs.writeFile('./data/messages.json', JSON.stringify(messages), (err) => {if (err) console.log('error',err)});
+// }, 1000);
