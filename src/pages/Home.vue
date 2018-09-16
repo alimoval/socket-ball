@@ -5,10 +5,10 @@
             {{ memory }}
         </div>
         <ul style='list-style:none;'>
-            <li v-for='message in messages' v-bind:key='message.id'>{{ message }}</li>
+            <li v-for='message in messages' v-bind:key='message.id'>User {{message.id}}: {{ message.message }}</li>
         </ul>
         <div>online: {{ online }}</div>
-        <form v-on:submit='sendMessage'>
+        <form v-on:submit.prevent='sendMessage'>
           <input type='text' v-model='newMessage'>
           <input type='submit' value='Send'>
         </form>
@@ -60,7 +60,7 @@ export default {
       }
     },
     sendMessage () {
-      this.ws.send(this.newMessage)
+      this.ws.send(JSON.stringify({'id': this.userId, 'type': 'message', 'message': this.newMessage}))
       this.newMessage = ''
     },
     messageHandler(event) {

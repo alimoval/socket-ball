@@ -44,21 +44,16 @@ let top = 1;
 let colors = ['blue', 'yellow', 'red', 'green'];
 
 app.ws('/', (ws, req) => {
-    ws.on('connection', () => {
-        console.log('connected');
-    });
     let id = counter++;
     let userTop = top++;
     let userColor = colors[Math.floor(Math.random()*colors.length)];
-    userCoordinates = { "id": id+'', "left": "10", "top": userTop*30+'', "color": userColor };
+    userCoordinates = { "id": id+'', "type": "coordinates", "left": "10", "top": userTop*30+'', "color": userColor };
     coordinates.push(userCoordinates);
     clients[id] = ws;
     console.log('WebSocket open');
     ws.on('message', (message) => {
-        try{
-            message = JSON.parse(message) || message;
-        } catch (e){ }
-        if(!message.id){
+        message = JSON.parse(message)
+        if(message.type === 'message'){
             console.log(message)
             messages.push(message);
             for (let cid in clients) {
@@ -83,13 +78,6 @@ app.ws('/', (ws, req) => {
                 }));
             }
         }
-        // for (let cid in clients) {
-        //     let client = clients[cid];
-        //     client.send(JSON.stringify({
-        //         type: 'coordinates',
-        //         message
-        //     }));
-        // }
     });
     // ws.on('open', (messages) => {
     //     for (let cid in clients) {
@@ -101,9 +89,6 @@ app.ws('/', (ws, req) => {
     //         }));
     //     }
     // });
-    ws.on('connection', () => {
-
-    });
     ws.on('close', () => {
         console.log('WebSocket close');
         delete clients[id];
@@ -112,10 +97,13 @@ app.ws('/', (ws, req) => {
         type: 'messages',
         messages
     }));
-    ws.send(JSON.stringify({
-        type: 'coordinates',
-        coordinates
-    }));
+    for (let cid in clients) {
+        let client = clients[cid];
+        client.send(JSON.stringify({
+            type: 'coordinates',
+            coordinates
+        }));
+    }
     ws.send(JSON.stringify({
         type: 'user',
         id
