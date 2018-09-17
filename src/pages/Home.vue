@@ -91,7 +91,7 @@ export default {
     },
     connect () {
       if (this.online) return false
-      this.ws = new WebSocket('ws://localhost:3000')
+      this.ws = new WebSocket('ws://localhost:35327')
       this.ws.addEventListener('open', () => { this.online = true})
       this.ws.addEventListener('close', () => { this.online = false })
       this.ws.addEventListener('error', (err) => { console.error(err) })
